@@ -1,7 +1,7 @@
 from django.shortcuts import render
 import requests
 import json
-import base64  # Import base64 for encoding image bytes
+import base64
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
@@ -40,7 +40,7 @@ def generate_images(service, prompt):
             headers = {
                 'x-api-key': "2aee5f564dfe39b501d82dab39633b21cb9848429dee77527c8c32839dc73fc92b3ca56641de83b28696bb98f49e79c7"
             }
-            # Use the provided snippet to send the request
+
             response = requests.post(url,
                 files={
                     'prompt': (None, prompt, 'text/plain')
@@ -95,8 +95,8 @@ LEVELS = {
         'tasks': [
             {
                 'task_number': 1,
-                'description': "Describe a serene beach scene.",
-                'objective': "Capture the tranquility and beauty of a peaceful beach setting."
+                'description': "In the heart of the Acropolis of Code, an ancient Oracle has awakened, foretelling a coming storm that threatens the harmony between man and machine. Queen Sophia, wise and just, has summoned the most skilled promptsmiths to her court. As a Promptian, your first task is to craft a simple yet powerful prompt that can guide the Oracle to reveal more about this impending danger. The prompt must be clear and precise, as the Oracle's response will shape the kingdom's next steps.",
+                'objective': "Create a prompt that will ask the Oracle to describe the nature of the threat posed by the Silencers and suggest ways to safeguard the kingdom. Keep it concise, ensuring the Oracle understands and responds with valuable insights."
             },
             {
                 'task_number': 2,
@@ -191,7 +191,7 @@ def home(request):
             level_number = data.get('level', None)
             task_number = data.get('task', None)
             user_prompt = data.get('prompt', None)
-            service = data.get('service', 'clipdrop')  # Default to ClipDrop if no service is selected
+            service = data.get('service', 'clipdrop')
 
             # Validate input data
             if level_number is None or task_number is None or user_prompt is None:
