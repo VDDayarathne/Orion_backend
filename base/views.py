@@ -2,11 +2,19 @@ from django.shortcuts import render
 import requests
 import json
 import base64
+import os
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+import google.generativeai as genai
 
-GEMINI_API_KEY = 'AIzaSyAHQnfMDZUcZ-C1ZZpSEAb4kNgvgrLL1rU'
+GEMINI_API_KEY = 'AIzaSyCNHr7tntpyPrHDf1z2QVjMrkNH4Z8WqpA'
 CLIPDROP_API_KEY = '2aee5f564dfe39b501d82dab39633b21cb9848429dee77527c8c32839dc73fc92b3ca56641de83b28696bb98f49e79c7'  # Replace with your actual ClipDrop API key
+IMAGEN_API_KEY = 'AIzaSyDlwTMLPIyV7q1mOP23YtlS1bu1nxZ7_1Y'  # Replace with your Imagen API key
+STABILITY_AI_API_KEY = 'sk-Ezo9a98HEdeSzopjxgQrAiLVFMWLiQYcn3iJrrPKkgR8T0m7'
+
+# Configure Imagen API
+genai.configure(api_key=IMAGEN_API_KEY)
+imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
 
 # Function to enhance the prompt using Gemini API (working correctly)
 def enhance_prompt_with_gemini(user_prompt, task_objective, task_description):
@@ -38,7 +46,7 @@ def generate_images(service, prompt):
         if service == 'clipdrop':
             url = 'https://clipdrop-api.co/text-to-image/v1'
             headers = {
-                'x-api-key': "2aee5f564dfe39b501d82dab39633b21cb9848429dee77527c8c32839dc73fc92b3ca56641de83b28696bb98f49e79c7"
+                'x-api-key': CLIPDROP_API_KEY
             }
 
             response = requests.post(url,
@@ -82,11 +90,54 @@ def generate_images(service, prompt):
                 print(f"Error: {response.status_code} - {response.text}")
                 return None
 
+        elif service == 'imagen3':
+            result = imagen.generate_images(
+                prompt=prompt,
+                number_of_images=1,  # Generate one image for this example
+                safety_filter_level="block_only_high",
+                person_generation="allow_adult",
+                aspect_ratio="3:4",
+                negative_prompt=""
+            )
+
+            # Assuming the API returns images as PIL objects
+            images = []
+            for image in result.images:
+                image_base64 = base64.b64encode(image._pil_image.tobytes()).decode('utf-8')
+                images.append(image_base64)
+
+            return images[0] if images else None
+
+        elif service == 'stability_ai':
+            url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+            headers = {
+                "authorization": f"Bearer {STABILITY_AI_API_KEY}",
+                "accept": "image/*"
+            }
+            data = {
+                "prompt": prompt,
+                "output_format": "jpeg"
+            }
+
+            response = requests.post(url, headers=headers, data=data, files={"none": ""})
+            print(f"Stability AI Response: {response.status_code}")
+
+            if response.status_code == 200:
+                return base64.b64encode(response.content).decode("utf-8")
+            else:
+                error_message = response.json() if response.headers.get("Content-Type") == "application/json" else response.text
+                print(f"Error: {response.status_code} - {error_message}")
+                return None
+
         else:
             return None
 
     except requests.RequestException as e:
         print(f"RequestException occurred: {str(e)}")
+        raise e
+
+    except Exception as e:
+        print(f"Unexpected exception: {str(e)}")
         raise e
 
 # Define levels, tasks with objectives and descriptions, and challenges
@@ -184,7 +235,7 @@ LEVELS = {
 }
 
 @csrf_exempt
-def home(request):
+def make_image(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
