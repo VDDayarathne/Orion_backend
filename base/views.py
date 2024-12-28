@@ -6,6 +6,7 @@ import os
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import google.generativeai as genai
+from .models import GeneratedImage
 
 GEMINI_API_KEY = 'AIzaSyCNHr7tntpyPrHDf1z2QVjMrkNH4Z8WqpA'
 CLIPDROP_API_KEY = '2aee5f564dfe39b501d82dab39633b21cb9848429dee77527c8c32839dc73fc92b3ca56641de83b28696bb98f49e79c7'  # Replace with your actual ClipDrop API key
@@ -190,7 +191,7 @@ LEVELS = {
                 'objective': "Imagine a strange and otherworldly landscape with alien flora and fauna."
             },
             {
-                'task_number': 4,
+                'task_number': 4, 
                 'description': "Illustrate a character from mythology.",
                 'objective': "Bring to life a character from ancient mythology, focusing on their iconic traits."
             },
@@ -272,6 +273,10 @@ def make_image(request):
             image_data = generate_images(service, enhanced_prompt)
 
             if image_data:
+                # Save the generated image to MongoDB
+                generated_image = GeneratedImage(prompt=enhanced_prompt, image_data=image_data, user_prompt=user_prompt)
+                generated_image.save()
+                
                 response_data = {
                     'images': [image_data],
                     'current_task_number': task_number,
