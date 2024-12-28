@@ -78,8 +78,12 @@ WSGI_APPLICATION = 'django_image_generator.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'Orion_Ai', 
+        'ENFORCE_SCHEMA': False, 
+        'CLIENT': {
+            'host': 'mongodb+srv://dayarathnavishwa:Orion_Ai@cluster0.rkv7o.mongodb.net/',
+        }
     }
 }
 
