@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import pymongo
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,9 +41,11 @@ INSTALLED_APPS = [
     'base.apps.BaseConfig',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,7 +60,7 @@ ROOT_URLCONF = 'django_image_generator.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,16 +79,31 @@ WSGI_APPLICATION = 'django_image_generator.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
+'''DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'Orion_Ai', 
         'ENFORCE_SCHEMA': False, 
         'CLIENT': {
-            'host': 'mongodb+srv://dayarathnavishwa:Orion_Ai@cluster0.rkv7o.mongodb.net/',
-        }
+            'host': 'mongodb+srv://dayarathnavishwa:Orion_Ai@cluster0.0xviw.mongodb.net/',
+        },
+        'IGNORE_SCHEMA_INTERFACE': True,
+    }
+} '''
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / "db.sqlite3",
     }
 }
+
+
+MONGO_URI = "mongodb+srv://dayarathnavishwa:Orion_Ai@cluster0.0xviw.mongodb.net/Orion_Ai"
+MONGO_CLIENT = pymongo.MongoClient(MONGO_URI)
+MONGO_DB = MONGO_CLIENT["Orion_Ai"]
+
+STATIC_URL = 'static/'
 
 
 # Password validation
@@ -145,3 +163,25 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+LOGIN_REDIRECT_URL = 'index'
+LOGOUT_REDIRECT_URL = 'index'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=5),  
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
